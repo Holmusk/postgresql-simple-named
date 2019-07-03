@@ -65,7 +65,7 @@ data PgNamedError
     | PgEmptyName PG.Query
 
 
--- | Type alias for 'PgNamedError'.
+-- | Type alias for monads that can throw errors of the 'PgNamedError' type.
 type WithError = MonadError PgNamedError
 
 instance Show PgNamedError where
