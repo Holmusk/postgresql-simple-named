@@ -1,8 +1,22 @@
-cabal-version:       2.0
+cabal-version:       2.4
 name:                postgresql-simple-named
 version:             0.0.0.0
 synopsis:            Implementation of named parameters for `postgresql-simple` library
-description:         Implementation of named parameters for `postgresql-simple` library
+description:
+    Implementation of named parameters for `postgresql-simple` library.
+    .
+    Here is an exaple of how it could be used in your code:
+    .
+    > queryNamed [sql|
+    >     SELECT *
+    >     FROM table
+    >     WHERE foo = ?foo
+    >       AND bar = ?bar
+    >       AND baz = ?foo
+    > |] [ "foo" =? "fooBar"
+    >    , "bar" =? "barVar"
+    >    ]
+
 homepage:            https://github.com/Holmusk/postgresql-simple-named
 bug-reports:         https://github.com/Holmusk/postgresql-simple-named/issues
 license:             MPL-2.0
@@ -14,19 +28,14 @@ category:            Database
 build-type:          Simple
 extra-doc-files:     README.md
                    , CHANGELOG.md
-tested-with:         GHC == 8.6.4
+tested-with:         GHC == 8.6.5
 
 source-repository head
   type:                git
   location:            https://github.com/Holmusk/postgresql-simple-named.git
 
-library
-  hs-source-dirs:      src
-  exposed-modules:     PostgresqlSimpleNamed
-                       
-
+common common-options
   build-depends:       base ^>= 4.12.0.0
-                     
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
@@ -53,39 +62,21 @@ library
                        TypeApplications
                        ViewPatterns
 
+library
+  import:              common-options
+  hs-source-dirs:      src
+  exposed-modules:     PgNamed
+  build-depends:       bytestring ^>= 0.10.8
+                     , mtl ^>= 2.2
+                     , postgresql-simple ^>= 0.6.2
+                     , text ^>= 1.2
+
 test-suite postgresql-simple-named-test
+  import:              common-options
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
 
-  build-depends:       base ^>= 4.12.0.0
-                     , postgresql-simple-named
-                     
+  build-depends:       postgresql-simple-named
 
-  ghc-options:         -Wall
-                       -threaded
-                       -rtsopts
-                       -with-rtsopts=-N
-                       -Wincomplete-uni-patterns
-                       -Wincomplete-record-updates
-                       -Wcompat
-                       -Widentities
-                       -Wredundant-constraints
-                       -fhide-source-paths
-                       -Wmissing-export-lists
-                       -Wpartial-fields
-
-  default-language:    Haskell2010
-  default-extensions:  ConstraintKinds
-                       DeriveGeneric
-                       GeneralizedNewtypeDeriving
-                       InstanceSigs
-                       KindSignatures
-                       LambdaCase
-                       OverloadedStrings
-                       RecordWildCards
-                       ScopedTypeVariables
-                       StandaloneDeriving
-                       TupleSections
-                       TypeApplications
-                       ViewPatterns
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
