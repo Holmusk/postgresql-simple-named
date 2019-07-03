@@ -51,8 +51,8 @@ newtype Name = Name
 
 -- | Data type to represent each named parameter.
 data NamedParam = NamedParam
-    { namedParamName  :: Name
-    , namedParamParam :: PG.Action
+    { namedParamName  :: !Name
+    , namedParamParam :: !PG.Action
     } deriving (Show)
 
 -- | @PostgreSQL@ error type for named parameters.
@@ -69,12 +69,12 @@ data PgNamedError
 type WithError = MonadError PgNamedError
 
 instance Show PgNamedError where
-    show e = "PostgeSQL named parameter error: " ++ case e of
-        PgNamedParam n -> "Named param '" ++ show n ++ "' is not specified"
+    show e = "PostgreSQL named parameter error: " ++ case e of
+        PgNamedParam n -> "Named parameter '" ++ show n ++ "' is not specified"
         PgNoNames (PG.Query q) ->
             "Query has no names but was called with named functions: " ++ BS.unpack q
         PgEmptyName (PG.Query q) ->
-            "Query contains empty name: " ++ BS.unpack q
+            "Query contains an empty name: " ++ BS.unpack q
 
 -- | Checks whether the 'Name' is in the list and returns its parameter.
 lookupName :: Name -> [NamedParam] -> Maybe PG.Action
