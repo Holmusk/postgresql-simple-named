@@ -21,28 +21,39 @@ queryNamed [sql|
 -}
 
 module PgNamed
-       ( NamedParam (..)
+       ( -- * Named data types and smart constructors
+         NamedParam (..)
        , Name (..)
+       , (=?)
 
+         -- * Functions to deal with named parameters
        , extractNames
        , namesToRow
-       , (=?)
+
+         -- * Database querying functions with named parameters
+       , queryNamed
+       , executeNamed
        ) where
 
 import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.Char (isAlphaNum)
+import Data.Int (Int64)
 import Data.List (lookup)
-import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty (NonEmpty (..), toList)
+import Data.Pool (Pool)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
 import GHC.Exts (IsString)
 
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Pool as Pool
 import qualified Database.PostgreSQL.Simple as PG
 import qualified Database.PostgreSQL.Simple.ToField as PG
 import qualified Database.PostgreSQL.Simple.Types as PG
+
 
 -- | Wrapper over name of the argument.
 newtype Name = Name
@@ -151,3 +162,57 @@ infix 7 =?
 (=?) :: (PG.ToField a) => Name -> a -> NamedParam
 n =? a = NamedParam n $ PG.toField a
 {-# INLINE (=?) #-}
+
+{- | Queries the database with a given query and named parameters
+and expects a list of rows in return.
+
+@
+queryNamed dbPool [sql|
+    SELECT id FROM table
+    WHERE foo = ?foo
+|] [ "foo" '=?' "bar" ]
+@
+-}
+queryNamed
+    :: (MonadIO m, WithError m, PG.FromRow res)
+    => Pool PG.Connection  -- ^ Database connection pool
+    -> PG.Query       -- ^ Query with named parameters inside
+    -> [NamedParam]   -- ^ The list of named parameters to be used in the query
+    -> m [res]        -- ^ Resulting rows
+queryNamed pool qNamed params =
+    withNamedArgs qNamed params >>= \(q, actions) ->
+        liftIO $ Pool.withResource pool (\conn -> PG.query conn q (toList actions))
+
+{- | Modifies the database with a given query and named parameters
+and expects a number of the rows affected.
+
+@
+executeNamed dbPool [sql|
+    UPDATE table
+    SET foo = 'bar'
+    WHERE id = ?id
+|] [ "id" '=?' someId ]
+@
+-}
+executeNamed
+    :: (MonadIO m, WithError m)
+    => Pool PG.Connection  -- ^ Database connection pool
+    -> PG.Query       -- ^ Query with named parameters inside
+    -> [NamedParam]   -- ^ The list of named parameters to be used in the query
+    -> m Int64        -- ^ Number of the rows affected by the given query
+executeNamed pool qNamed params =
+    withNamedArgs qNamed params >>= \(q, actions) ->
+        liftIO $ Pool.withResource pool (\conn -> PG.execute conn q (toList actions))
+
+-- | Helper to use named parameters.
+withNamedArgs
+    :: WithError m
+    => PG.Query
+    -> [NamedParam]
+    -> m (PG.Query, NonEmpty PG.Action)
+withNamedArgs qNamed namedArgs = do
+    (q, names) <- case extractNames qNamed of
+        Left errType -> throwError errType
+        Right r      -> pure r
+    args <- namesToRow names namedArgs
+    pure (q, args)
