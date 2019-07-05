@@ -69,6 +69,7 @@ library
   build-depends:       bytestring ^>= 0.10.8
                      , mtl ^>= 2.2
                      , postgresql-simple ^>= 0.6.2
+                     , resource-pool ^>= 0.2.3.2
                      , text ^>= 1.2
 
 test-suite postgresql-simple-named-test
