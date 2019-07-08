@@ -77,6 +77,7 @@ data PgNamedError
     | PgNoNames PG.Query
     -- | Query contains an empty name.
     | PgEmptyName PG.Query
+  deriving (Eq)
 
 
 -- | Type alias for monads that can throw errors of the 'PgNamedError' type.
