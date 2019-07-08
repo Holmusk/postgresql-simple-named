@@ -26,6 +26,9 @@ module PgNamed
        , Name (..)
        , (=?)
 
+         -- * Errors
+       , PgNamedError (..)
+
          -- * Functions to deal with named parameters
        , extractNames
        , namesToRow
