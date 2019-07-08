@@ -146,7 +146,7 @@ namesToRow names params = traverse magicLookup names
 {- | Operator to create 'NamedParam's.
 
 >>> "foo" =? (1 :: Int)
-NamedParam {namedParamName = "foo", namedParamParam = 1}
+NamedParam {namedParamName = "foo", namedParamParam = Plain "1"}
 
 So it can be used in creating the list of the named arguments:
 
