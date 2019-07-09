@@ -78,7 +78,12 @@ test-suite postgresql-simple-named-test
   hs-source-dirs:      test
   main-is:             Spec.hs
 
-  build-depends:       postgresql-simple-named
+  build-depends:       bytestring
+                     , hspec >= 2.6 && < 2.8
+                     , postgresql-simple-named
+                     , postgresql-simple
+                     , resource-pool
+                     , transformers
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
 
