@@ -40,7 +40,7 @@ install:
     fi
 
 before_script:
-  - psql -c "CREATE DATABASE pg-named;" -U postgres
+  - psql -c "CREATE DATABASE pg_named;" -U postgres
 
 script:
   - |

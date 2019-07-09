@@ -17,7 +17,7 @@ import qualified Database.PostgreSQL.Simple as Sql
 
 
 connectionSettings :: ByteString
-connectionSettings ="host=localhost port=5432 user=postgres dbname=pg-named"
+connectionSettings ="host=localhost port=5432 user=postgres dbname=pg_named"
 
 main :: IO ()
 main = do
