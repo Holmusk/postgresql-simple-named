@@ -15,8 +15,6 @@ cache:
 # add PostgreSQL with version 10
 services:
   - postgresql
-addons:
-  postgresql: "10"
 
 matrix:
   include:
