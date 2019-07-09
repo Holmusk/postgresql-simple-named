@@ -12,6 +12,12 @@ cache:
   - "$HOME/.stack"
   - "$TRAVIS_BUILD_DIR/.stack-work"
 
+# add PostgreSQL with version 10
+services:
+  - postgresql
+addons:
+  postgresql: "10"
+
 matrix:
   include:
   - ghc: 8.6.5
@@ -34,6 +40,9 @@ install:
       stack --version
       stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --ghc-options=-Werror
     fi
+
+before_script:
+  - psql -c "CREATE DATABASE pg-named;" -U root
 
 script:
   - |
