@@ -16,6 +16,6 @@ Build the library with either `cabal new-build` or `stack build`.
 
 * Run DB in a Docker in a separate terminal window using command:
   ```
-  docker run -p 5432\:5432 -e POSTGRES_USER=root -e POSTGRES_DB=pg-named postgres\:10.5-alpine
+  docker run -p 5432\:5432 -e POSTGRES_USER=postgres -e POSTGRES_DB=pg-named postgres\:10.5-alpine
   ```
 * Run tests using `cabal new-test` or `stack test`
