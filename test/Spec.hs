@@ -10,7 +10,7 @@ import GHC.Generics (Generic)
 import System.IO (hSetEncoding, stderr, stdout, utf8)
 import Test.Hspec (Spec, describe, hspec, it, shouldReturn)
 
-import PgNamed (PgNamedError (..), queryNamed, (=?))
+import PgNamed (NamedParam, PgNamedError (..), queryNamed, (=?))
 
 import qualified Data.Pool as Pool
 import qualified Database.PostgreSQL.Simple as Sql
@@ -38,19 +38,22 @@ unitTests dbPool = describe "Testing: postgresql-simple-named" $ do
         queryTestValue `shouldReturn` Right (TestValue 42 42 "baz")
   where
     missingNamedParam :: IO (Either PgNamedError TestValue)
-    missingNamedParam = runNamedQuery $ queryNamed dbPool "SELECT ?foo, ?bar" ["foo" =? True]
+    missingNamedParam = run "SELECT ?foo, ?bar" ["foo" =? True]
 
     noNamedParams :: IO (Either PgNamedError TestValue)
-    noNamedParams = runNamedQuery $ queryNamed dbPool "SELECT 42" []
+    noNamedParams = run "SELECT 42" []
 
     emptyName :: IO (Either PgNamedError TestValue)
-    emptyName = runNamedQuery $ queryNamed dbPool "SELECT ?foo, ?" ["foo" =? True]
+    emptyName = run "SELECT ?foo, ?" ["foo" =? True]
 
     queryTestValue :: IO (Either PgNamedError TestValue)
-    queryTestValue = runNamedQuery $ queryNamed dbPool "SELECT ?intVal, ?intVal, ?txtVal"
+    queryTestValue = run "SELECT ?intVal, ?intVal, ?txtVal"
         [ "intVal" =? (42 :: Int)
         , "txtVal" =? ("baz" :: ByteString)
         ]
+
+    run :: Sql.Query -> [NamedParam] -> IO (Either PgNamedError TestValue)
+    run q params = runNamedQuery $ Pool.withResource dbPool (\conn -> queryNamed conn q params)
 
 runNamedQuery :: ExceptT PgNamedError IO [TestValue] -> IO (Either PgNamedError TestValue)
 runNamedQuery = fmap (second head) . runExceptT
