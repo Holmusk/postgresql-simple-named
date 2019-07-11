@@ -4,18 +4,19 @@
 
 {- | Introduces named parameters for @postgresql-simple@ library.
 It uses @?@ question mark symbol as the indicator of the named parameter which
-is replaced with the standard syntax with question marks. Check out the example
-of usage:
+is replaced with the standard syntax with question marks.
+
+Check out the example of usage:
 
 @
-queryNamed [sql|
+'queryNamed' [sql|
     SELECT *
     FROM users
     WHERE foo = ?foo
       AND bar = ?bar
       AND baz = ?foo
-|] [ "foo" =? "fooBar"
-   , "bar" =? "barVar"
+|] [ "foo" '=?' "fooBar"
+   , "bar" '=?' "barVar"
    ]
 @
 -}
@@ -28,6 +29,7 @@ module PgNamed
 
          -- * Errors
        , PgNamedError (..)
+       , WithNamedError
 
          -- * Functions to deal with named parameters
        , extractNames
@@ -71,7 +73,7 @@ data NamedParam = NamedParam
 data PgNamedError
     -- | Named parameter is not specified.
     = PgNamedParam Name
-    -- | Query has no names inside but was called with named functions,
+    -- | Query has no names inside but was called with named functions.
     | PgNoNames PG.Query
     -- | Query contains an empty name.
     | PgEmptyName PG.Query
@@ -79,7 +81,7 @@ data PgNamedError
 
 
 -- | Type alias for monads that can throw errors of the 'PgNamedError' type.
-type WithError = MonadError PgNamedError
+type WithNamedError = MonadError PgNamedError
 
 instance Show PgNamedError where
     show e = "PostgreSQL named parameter error: " ++ case e of
@@ -99,8 +101,8 @@ lookupName n = lookup n . map (\NamedParam{..} -> (namedParamName, namedParamPar
 SELECT name, user FROM users WHERE id = ?id
 @
 
-and returns either the error or query with all all names replaced by
-questiosn marks @?@ with list of the names in the order of their appearance.
+and returns either the error or the query with all names replaced by
+question marks @?@ with the list of the names in the order of their appearance.
 
 For example:
 
@@ -132,9 +134,11 @@ extractNames qr = go (PG.fromQuery qr) >>= \case
     isNameChar c = isAlphaNum c || c == '_'
 
 
--- | Returns the list of values to use in query by given list of 'Name's.
+{- | Returns the list of values to use in query by given list of 'Name's.
+Throws 'PgNamedError' if any named parameter is not specified.
+-}
 namesToRow
-    :: forall m . WithError m
+    :: forall m . WithNamedError m
     => NonEmpty Name  -- ^ List of the names used in query
     -> [NamedParam]   -- ^ List of the named parameters
     -> m (NonEmpty PG.Action)
@@ -176,7 +180,7 @@ queryNamed dbConnection [sql|
 @
 -}
 queryNamed
-    :: (MonadIO m, WithError m, PG.FromRow res)
+    :: (MonadIO m, WithNamedError m, PG.FromRow res)
     => PG.Connection  -- ^ Database connection
     -> PG.Query       -- ^ Query with named parameters inside
     -> [NamedParam]   -- ^ The list of named parameters to be used in the query
@@ -197,7 +201,7 @@ executeNamed dbConnection [sql|
 @
 -}
 executeNamed
-    :: (MonadIO m, WithError m)
+    :: (MonadIO m, WithNamedError m)
     => PG.Connection  -- ^ Database connection
     -> PG.Query       -- ^ Query with named parameters inside
     -> [NamedParam]   -- ^ The list of named parameters to be used in the query
@@ -208,7 +212,7 @@ executeNamed conn qNamed params =
 
 -- | Helper to use named parameters.
 withNamedArgs
-    :: WithError m
+    :: WithNamedError m
     => PG.Query
     -> [NamedParam]
     -> m (PG.Query, NonEmpty PG.Action)
