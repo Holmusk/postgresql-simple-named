@@ -48,7 +48,7 @@ query dbConnection [sql|
 ```
 
 This is how the query looks like with the `postgresql-simple` library. You can
-rewrite it the following way:
+rewrite it the following way using the `postgresql-simple-named` library:
 
 ```haskell
 queryNamed dbConnection [sql|
