@@ -24,7 +24,7 @@ license-file:        LICENSE
 author:              Dmitrii Kovanikov, Veronika Romashkina
 maintainer:          Holmusk <tech@holmusk.com>
 copyright:           2019 Holmusk
-category:            Database
+category:            Database, PostgreSQL
 build-type:          Simple
 extra-doc-files:     README.md
                    , CHANGELOG.md
