@@ -11,7 +11,7 @@ This library introduces the implementation of named parameters for the
 be used along with the [`postgresql-simple`][pgs] library, so you could refer
 there for the original documentation of primary functions. This package solves
 exclusively one particular problem — gives the ability to use named parameters
-instead of `?` in quasi-quoter queries and offers essential functions for using
+instead of `?` in quasi-quoter queries and offers essential functions for substituting variables
 them in queries (`queryNamed`, `executeNamed`).
 
 ## Example
