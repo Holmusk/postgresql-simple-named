@@ -9,7 +9,7 @@ is replaced with the standard syntax with question marks.
 Check out the example of usage:
 
 @
-queryNamed [sql|
+'queryNamed' [sql|
     SELECT *
     FROM users
     WHERE foo = ?foo
