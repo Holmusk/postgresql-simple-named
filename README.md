@@ -33,7 +33,7 @@ queryNamed dbConnection [sql|
    ]
 ```
 
-This feature can be extremely helpful when the query using some parameters more than once:
+This feature can be extremely helpful when the query uses some parameters more than once:
 
 ```haskell
 query dbConnection [sql|
