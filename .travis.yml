@@ -12,12 +12,13 @@ cache:
   - "$HOME/.stack"
   - "$TRAVIS_BUILD_DIR/.stack-work"
 
-# add PostgreSQL with version 10
 services:
   - postgresql
 
 matrix:
   include:
+  - ghc: 8.2.2
+  - ghc: 8.4.4
   - ghc: 8.6.5
 
   - ghc: 8.6.5
