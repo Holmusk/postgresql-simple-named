@@ -3,7 +3,7 @@ name:                postgresql-simple-named
 version:             0.0.0.0
 synopsis:            Implementation of named parameters for `postgresql-simple` library
 description:
-    Implementation of named parameters for `postgresql-simple` library.
+    Implementation of named parameters for @postgresql-simple@ library.
     .
     Here is an exaple of how it could be used in your code:
     .
