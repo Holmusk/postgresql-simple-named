@@ -160,7 +160,7 @@ queryNamed [sql|
    ]
 @
 -}
-infix 7 =?
+infix 1 =?
 (=?) :: (PG.ToField a) => Name -> a -> NamedParam
 n =? a = NamedParam n $ PG.toField a
 {-# INLINE (=?) #-}
