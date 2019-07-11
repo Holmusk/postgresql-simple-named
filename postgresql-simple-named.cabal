@@ -21,8 +21,8 @@ homepage:            https://github.com/Holmusk/postgresql-simple-named
 bug-reports:         https://github.com/Holmusk/postgresql-simple-named/issues
 license:             MPL-2.0
 license-file:        LICENSE
-author:              Holmusk
-maintainer:          Holmusk<tech@holmusk.com>
+author:              Dmitrii Kovanikov, Veronika Romashkina
+maintainer:          Holmusk <tech@holmusk.com>
 copyright:           2019 Holmusk
 category:            Database
 build-type:          Simple

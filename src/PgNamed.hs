@@ -29,7 +29,7 @@ module PgNamed
 
          -- * Errors
        , PgNamedError (..)
-       , WithError
+       , WithNamedError
 
          -- * Functions to deal with named parameters
        , extractNames
@@ -81,7 +81,7 @@ data PgNamedError
 
 
 -- | Type alias for monads that can throw errors of the 'PgNamedError' type.
-type WithError = MonadError PgNamedError
+type WithNamedError = MonadError PgNamedError
 
 instance Show PgNamedError where
     show e = "PostgreSQL named parameter error: " ++ case e of
@@ -138,7 +138,7 @@ extractNames qr = go (PG.fromQuery qr) >>= \case
 Throws 'PgNamedError' if any named parameter is not specified.
 -}
 namesToRow
-    :: forall m . WithError m
+    :: forall m . WithNamedError m
     => NonEmpty Name  -- ^ List of the names used in query
     -> [NamedParam]   -- ^ List of the named parameters
     -> m (NonEmpty PG.Action)
@@ -180,7 +180,7 @@ queryNamed dbConnection [sql|
 @
 -}
 queryNamed
-    :: (MonadIO m, WithError m, PG.FromRow res)
+    :: (MonadIO m, WithNamedError m, PG.FromRow res)
     => PG.Connection  -- ^ Database connection
     -> PG.Query       -- ^ Query with named parameters inside
     -> [NamedParam]   -- ^ The list of named parameters to be used in the query
@@ -201,7 +201,7 @@ executeNamed dbConnection [sql|
 @
 -}
 executeNamed
-    :: (MonadIO m, WithError m)
+    :: (MonadIO m, WithNamedError m)
     => PG.Connection  -- ^ Database connection
     -> PG.Query       -- ^ Query with named parameters inside
     -> [NamedParam]   -- ^ The list of named parameters to be used in the query
@@ -212,7 +212,7 @@ executeNamed conn qNamed params =
 
 -- | Helper to use named parameters.
 withNamedArgs
-    :: WithError m
+    :: WithNamedError m
     => PG.Query
     -> [NamedParam]
     -> m (PG.Query, NonEmpty PG.Action)
