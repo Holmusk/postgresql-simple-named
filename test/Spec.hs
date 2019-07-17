@@ -14,7 +14,7 @@ import PgNamed (NamedParam, PgNamedError (..), queryNamed, queryWithNamed, (=?))
 
 import qualified Data.Pool as Pool
 import qualified Database.PostgreSQL.Simple as Sql
-import qualified Database.PostgreSQL.Simple.FromRow a s Sql
+import qualified Database.PostgreSQL.Simple.FromRow as Sql
 
 
 connectionSettings :: ByteString
@@ -82,9 +82,9 @@ data TestValue = TestValue
     } deriving stock (Show, Eq, Generic)
       deriving anyclass (Sql.FromRow, Sql.ToRow)
 
-testValueParser :: RowParser TestValue
+testValueParser :: Sql.RowParser TestValue
 testValueParser = do
-    intVal1 <- field
-    intVal2 <- field
-    txtVal  <- field
+    intVal1 <- Sql.field
+    intVal2 <- Sql.field
+    txtVal  <- Sql.field
     return TestValue{..}
