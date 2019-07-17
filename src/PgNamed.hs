@@ -37,6 +37,7 @@ module PgNamed
 
          -- * Database querying functions with named parameters
        , queryNamed
+       , queryWithNamed
        , executeNamed
        ) where
 
@@ -54,6 +55,7 @@ import GHC.Exts (IsString)
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Database.PostgreSQL.Simple as PG
+import qualified Database.PostgreSQL.Simple.FromRow as PG
 import qualified Database.PostgreSQL.Simple.ToField as PG
 import qualified Database.PostgreSQL.Simple.Types as PG
 
@@ -188,6 +190,27 @@ queryNamed
 queryNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
         liftIO $ PG.query conn q (toList actions)
+
+{- | Queries the database with a given row parser, query, and named parameters
+and expects a list of rows in return.
+
+@
+queryWithNamed rowParser dbConnection [sql|
+    SELECT id FROM table
+    WHERE foo = ?foo
+|] [ "foo" '=?' "bar" ]
+@
+-}
+queryWithNamed
+    :: (MonadIO m, WithNamedError m)
+    => PG.RowParser res -- ^ Custom defined row parser
+    -> PG.Connection    -- ^ Database connection
+    -> PG.Query         -- ^ Query with named parameters inside
+    -> [NamedParam]     -- ^ The list of named parameters to be used in the query
+    -> m [res]          -- ^ Resulting rows
+queryWithNamed rowParser conn qNamed params =
+    withNamedArgs qNamed params >>= \(q, actions) ->
+        liftIO $ PG.queryWith rowParser conn q (toList actions)
 
 {- | Modifies the database with a given query and named parameters
 and expects a number of the rows affected.
