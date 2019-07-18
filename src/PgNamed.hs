@@ -191,7 +191,7 @@ queryNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
         liftIO $ PG.query conn q (toList actions)
 
-{- | Queries the database with a given row parser, query, and named parameters
+{- | Queries the database with a given row parser, 'PG.Query', and named parameters
 and expects a list of rows in return.
 
 @
