@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts   #-}
 
 module Main (main) where
 
@@ -56,21 +57,27 @@ unitTests dbPool = describe "Testing: postgresql-simple-named" $ do
         ]
 
     queryWithTestValue :: IO (Either PgNamedError TestValue)
-    queryWithTestValue = runQueryWith testValueParser "SELECT ?intVal, ?intVal, ?txtVal"
+    queryWithTestValue = runWith testValueParser "SELECT ?intVal, ?intVal, ?txtVal"
         [ "intVal" =? (42 :: Int)
         , "txtVal" =? ("baz" :: ByteString)
         ]
 
     run :: Sql.Query -> [NamedParam] -> IO (Either PgNamedError TestValue)
-    run q params = runNamedQuery $ Pool.withResource dbPool (\conn -> queryNamed conn q params)
+    run = callQuery queryNamed
 
-    runQueryWith
+    runWith
         :: Sql.RowParser TestValue
         -> Sql.Query
         -> [NamedParam]
         -> IO (Either PgNamedError TestValue)
-    runQueryWith rowParser q params = runNamedQuery $
-        Pool.withResource dbPool (\conn -> queryWithNamed rowParser conn q params)
+    runWith rowParser = callQuery (queryWithNamed rowParser)
+
+    callQuery
+        :: (Sql.Connection -> Sql.Query -> [NamedParam] -> ExceptT PgNamedError IO [TestValue])
+        -> Sql.Query
+        -> [NamedParam]
+        -> IO (Either PgNamedError TestValue)
+    callQuery f q params = runNamedQuery $ Pool.withResource dbPool (\conn -> f conn q params)
 
 runNamedQuery :: ExceptT PgNamedError IO [TestValue] -> IO (Either PgNamedError TestValue)
 runNamedQuery = fmap (second head) . runExceptT

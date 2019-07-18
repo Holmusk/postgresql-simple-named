@@ -194,6 +194,12 @@ queryNamed conn qNamed params =
 {- | Queries the database with a given row parser, 'PG.Query', and named parameters
 and expects a list of rows in return.
 
+Sometimes, instead of using Haskell's derived`FromRow` instance to parse tuples returned
+by @postgreSQL@ , we may wish to define our own row parser. In this case, the
+@postgresql-simple@ library provides the 'PG.queryWith' function, which takes an additional
+row parser argument. 'queryWithNamed' provides the same facility, but with the additional
+benefit of named parameters.
+
 @
 queryWithNamed rowParser dbConnection [sql|
     SELECT id FROM table
