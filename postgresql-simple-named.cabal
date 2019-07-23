@@ -1,13 +1,13 @@
 cabal-version:       2.4
 name:                postgresql-simple-named
-version:             0.0.0.0
+version:             0.0.1.0
 synopsis:            Implementation of named parameters for `postgresql-simple` library
 description:
     Implementation of named parameters for @postgresql-simple@ library.
     .
     Here is an exaple of how it could be used in your code:
     .
-    > queryNamed [sql|
+    > queryNamed dbConnection [sql|
     >     SELECT *
     >     FROM table
     >     WHERE foo = ?foo
@@ -21,7 +21,7 @@ homepage:            https://github.com/Holmusk/postgresql-simple-named
 bug-reports:         https://github.com/Holmusk/postgresql-simple-named/issues
 license:             MPL-2.0
 license-file:        LICENSE
-author:              Dmitrii Kovanikov, Veronika Romashkina
+author:              Veronika Romashkina, Dmitrii Kovanikov
 maintainer:          Holmusk <tech@holmusk.com>
 copyright:           2019 Holmusk
 category:            Database, PostgreSQL

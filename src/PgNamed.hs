@@ -1,6 +1,5 @@
-{-# LANGUAGE DerivingStrategies        #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts   #-}
 
 {- | Introduces named parameters for @postgresql-simple@ library.
 It uses @?@ question mark symbol as the indicator of the named parameter which
@@ -9,12 +8,12 @@ is replaced with the standard syntax with question marks.
 Check out the example of usage:
 
 @
-'queryNamed' [sql|
-    SELECT *
-    FROM users
-    WHERE foo = ?foo
-      AND bar = ?bar
-      AND baz = ?foo
+'queryNamed' dbConnection [sql|
+    __SELECT__ *
+    __FROM__ users
+    __WHERE__ foo = ?foo
+      __AND__ bar = ?bar
+      __AND__ baz = ?foo
 |] [ "foo" '=?' "fooBar"
    , "bar" '=?' "barVar"
    ]
@@ -39,6 +38,9 @@ module PgNamed
        , queryNamed
        , queryWithNamed
        , executeNamed
+
+         -- * Internal utils
+       , withNamedArgs
        ) where
 
 import Control.Monad.Except (MonadError (throwError))
@@ -69,7 +71,7 @@ newtype Name = Name
 data NamedParam = NamedParam
     { namedParamName  :: !Name
     , namedParamParam :: !PG.Action
-    } deriving (Show)
+    } deriving stock (Show)
 
 -- | @PostgreSQL@ error type for named parameters.
 data PgNamedError
@@ -79,7 +81,7 @@ data PgNamedError
     | PgNoNames PG.Query
     -- | Query contains an empty name.
     | PgEmptyName PG.Query
-  deriving (Eq)
+    deriving stock (Eq)
 
 
 -- | Type alias for monads that can throw errors of the 'PgNamedError' type.
@@ -100,7 +102,7 @@ lookupName n = lookup n . map (\NamedParam{..} -> (namedParamName, namedParamPar
 {- | This function takes query with named parameters specified like this:
 
 @
-SELECT name, user FROM users WHERE id = ?id
+__SELECT__ name, user __FROM__ users __WHERE__ id = ?id
 @
 
 and returns either the error or the query with all names replaced by
@@ -159,10 +161,14 @@ NamedParam {namedParamName = "foo", namedParamParam = Plain "1"}
 So it can be used in creating the list of the named arguments:
 
 @
-queryNamed [sql|
-  SELECT * FROM users WHERE foo = ?foo AND bar = ?bar AND baz = ?foo"
-|] [ "foo" =? "fooBar"
-   , "bar" =? "barVar"
+'queryNamed' dbConnection [sql|
+    __SELECT__ *
+    __FROM__ users
+    __WHERE__ foo = ?foo
+      __AND__ bar = ?bar
+      __AND__ baz = ?foo
+|] [ "foo" '=?' "fooBar"
+   , "bar" '=?' "barVar"
    ]
 @
 -}
@@ -175,9 +181,10 @@ n =? a = NamedParam n $ PG.toField a
 and expects a list of rows in return.
 
 @
-queryNamed dbConnection [sql|
-    SELECT id FROM table
-    WHERE foo = ?foo
+'queryNamed' dbConnection [sql|
+    __SELECT__ id
+    __FROM__ table
+    __WHERE__ foo = ?foo
 |] [ "foo" '=?' "bar" ]
 @
 -}
@@ -194,41 +201,34 @@ queryNamed conn qNamed params =
 {- | Queries the database with a given row parser, 'PG.Query', and named parameters
 and expects a list of rows in return.
 
-Sometimes there are multiple ways to parse tuples returned by @postgreSQL@, but each case maps
-back to the same Haskell datatype. That is, there are multiple 'PG.FromRow' instances for this
-Haskell datatype. As a trivial example, suppose we have a @postgreSQL@ table which stores a
-person's name and age. A person's details are captured by the following Haskell datatype:
+Sometimes there are multiple ways to parse tuples returned by PostgreSQL into
+the same data type. However, it's not possible to implement multiple intances of
+the 'PG.FromRow' typeclass (or any other typeclass).
+
+Consider the following data type:
 
 @
-data Person = Person
-  {
-    name :: Text
-  , age  :: Maybe Int
-  }
+__data__ Person = Person
+    { personName :: !Text
+    , personAge  :: !(Maybe Int)
+    }
 @
 
-There are 2 possible situations which arise: one where we need both the person's name and age
-(e.g. to filter people by age) and one where we need only the name (e.g. to get the names of
-all the people in the database). This corresponds to 2 'PG.FromRow' instances for the @Person@
-type, one which parses both the name and the age of the person, and one which parses only the
-name of the person, and sets the age to @Nothing@.
+We might want to parse values of the @Person@ data type in two ways:
 
-In such situations, we could define @newtype@s and corresponding 'PG.FromRow'
-instances. However, if we do not want to deal with @newtype@s, then we may alternatively define
-custom row parsers corresponding to the different ways of parsing tuples. Writing custom row
-parsers is also helpful to avoid code repetition. This is because sharing code between them
-is easier as compared sharing code between different 'PG.FromRow' instances of @newtype@s. This
-is especially useful when the row parsers involve non-trivial logic.
+1. Default by parsing all fields.
+2. Parse only name and @age@ to 'Nothing'.
 
-For such situations where multiple row parsers are required, @postgresql-simple@ library
-provides the 'PG.queryWith' function, which takes an additional row parser argument.
-'queryWithNamed' provides the same facility, but with the additional benefit of named
-parameters:
+If you want to have multiple instances, you need to create @newtype@ for each
+case. However, in some cases it might not be convenient to deal with newtypes
+around large data types. So you can implement custom 'PG.RowParser' and use it
+with 'queryWithNamed'.
 
 @
-queryWithNamed rowParser dbConnection [sql|
-    SELECT id FROM table
-    WHERE foo = ?foo
+'queryWithNamed' rowParser dbConnection [sql|
+    __SELECT__ id
+    __FROM__ table
+    __WHERE__ foo = ?foo
 |] [ "foo" '=?' "bar" ]
 @
 -}
@@ -247,10 +247,10 @@ queryWithNamed rowParser conn qNamed params =
 and expects a number of the rows affected.
 
 @
-executeNamed dbConnection [sql|
-    UPDATE table
-    SET foo = 'bar'
-    WHERE id = ?id
+'executeNamed' dbConnection [sql|
+    __UPDATE__ table
+    __SET__ foo = \'bar\'
+    __WHERE__ id = ?id
 |] [ "id" '=?' someId ]
 @
 -}
@@ -264,7 +264,13 @@ executeNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
         liftIO $ PG.execute conn q (toList actions)
 
--- | Helper to use named parameters.
+{- | Helper to use named parameters. Use it to implement named wrappers around
+functions from @postgresql-simple@ library. If you think that the function is
+useful, consider opening feature request to the @postgresql-simple-named@
+library:
+
+* https://github.com/Holmusk/postgresql-simple-named/issues
+-}
 withNamedArgs
     :: WithNamedError m
     => PG.Query
