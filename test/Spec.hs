@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts   #-}
 
 module Main (main) where
 
@@ -10,10 +11,11 @@ import GHC.Generics (Generic)
 import System.IO (hSetEncoding, stderr, stdout, utf8)
 import Test.Hspec (Spec, describe, hspec, it, shouldReturn)
 
-import PgNamed (NamedParam, PgNamedError (..), queryNamed, (=?))
+import PgNamed (NamedParam, PgNamedError (..), queryNamed, queryWithNamed, (=?))
 
 import qualified Data.Pool as Pool
 import qualified Database.PostgreSQL.Simple as Sql
+import qualified Database.PostgreSQL.Simple.FromRow as Sql
 
 
 connectionSettings :: ByteString
@@ -36,6 +38,8 @@ unitTests dbPool = describe "Testing: postgresql-simple-named" $ do
         emptyName `shouldReturn` Left (PgEmptyName "SELECT ?foo, ?")
     it "named parameters are parsed and passed correctly" $
         queryTestValue `shouldReturn` Right (TestValue 42 42 "baz")
+    it "named parameters are parsed correctly by user defined row parser" $
+        queryWithTestValue `shouldReturn` Right (TestValue 42 42 "baz")
   where
     missingNamedParam :: IO (Either PgNamedError TestValue)
     missingNamedParam = run "SELECT ?foo, ?bar" ["foo" =? True]
@@ -52,8 +56,28 @@ unitTests dbPool = describe "Testing: postgresql-simple-named" $ do
         , "txtVal" =? ("baz" :: ByteString)
         ]
 
+    queryWithTestValue :: IO (Either PgNamedError TestValue)
+    queryWithTestValue = runWith testValueParser "SELECT ?intVal, ?intVal, ?txtVal"
+        [ "intVal" =? (42 :: Int)
+        , "txtVal" =? ("baz" :: ByteString)
+        ]
+
     run :: Sql.Query -> [NamedParam] -> IO (Either PgNamedError TestValue)
-    run q params = runNamedQuery $ Pool.withResource dbPool (\conn -> queryNamed conn q params)
+    run = callQuery queryNamed
+
+    runWith
+        :: Sql.RowParser TestValue
+        -> Sql.Query
+        -> [NamedParam]
+        -> IO (Either PgNamedError TestValue)
+    runWith rowParser = callQuery (queryWithNamed rowParser)
+
+    callQuery
+        :: (Sql.Connection -> Sql.Query -> [NamedParam] -> ExceptT PgNamedError IO [TestValue])
+        -> Sql.Query
+        -> [NamedParam]
+        -> IO (Either PgNamedError TestValue)
+    callQuery f q params = runNamedQuery $ Pool.withResource dbPool (\conn -> f conn q params)
 
 runNamedQuery :: ExceptT PgNamedError IO [TestValue] -> IO (Either PgNamedError TestValue)
 runNamedQuery = fmap (second head) . runExceptT
@@ -64,3 +88,10 @@ data TestValue = TestValue
     , txtVal  :: !ByteString
     } deriving stock (Show, Eq, Generic)
       deriving anyclass (Sql.FromRow, Sql.ToRow)
+
+testValueParser :: Sql.RowParser TestValue
+testValueParser = do
+    intVal1 <- Sql.field
+    intVal2 <- Sql.field
+    txtVal  <- Sql.field
+    return TestValue{..}

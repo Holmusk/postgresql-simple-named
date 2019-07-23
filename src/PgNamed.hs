@@ -37,6 +37,7 @@ module PgNamed
 
          -- * Database querying functions with named parameters
        , queryNamed
+       , queryWithNamed
        , executeNamed
        ) where
 
@@ -54,6 +55,7 @@ import GHC.Exts (IsString)
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Database.PostgreSQL.Simple as PG
+import qualified Database.PostgreSQL.Simple.FromRow as PG
 import qualified Database.PostgreSQL.Simple.ToField as PG
 import qualified Database.PostgreSQL.Simple.Types as PG
 
@@ -188,6 +190,58 @@ queryNamed
 queryNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
         liftIO $ PG.query conn q (toList actions)
+
+{- | Queries the database with a given row parser, 'PG.Query', and named parameters
+and expects a list of rows in return.
+
+Sometimes there are multiple ways to parse tuples returned by @postgreSQL@, but each case maps
+back to the same Haskell datatype. That is, there are multiple 'PG.FromRow' instances for this
+Haskell datatype. As a trivial example, suppose we have a @postgreSQL@ table which stores a
+person's name and age. A person's details are captured by the following Haskell datatype:
+
+@
+data Person = Person
+  {
+    name :: Text
+  , age  :: Maybe Int
+  }
+@
+
+There are 2 possible situations which arise: one where we need both the person's name and age
+(e.g. to filter people by age) and one where we need only the name (e.g. to get the names of
+all the people in the database). This corresponds to 2 'PG.FromRow' instances for the @Person@
+type, one which parses both the name and the age of the person, and one which parses only the
+name of the person, and sets the age to @Nothing@.
+
+In such situations, we could define @newtype@s and corresponding 'PG.FromRow'
+instances. However, if we do not want to deal with @newtype@s, then we may alternatively define
+custom row parsers corresponding to the different ways of parsing tuples. Writing custom row
+parsers is also helpful to avoid code repetition. This is because sharing code between them
+is easier as compared sharing code between different 'PG.FromRow' instances of @newtype@s. This
+is especially useful when the row parsers involve non-trivial logic.
+
+For such situations where multiple row parsers are required, @postgresql-simple@ library
+provides the 'PG.queryWith' function, which takes an additional row parser argument.
+'queryWithNamed' provides the same facility, but with the additional benefit of named
+parameters:
+
+@
+queryWithNamed rowParser dbConnection [sql|
+    SELECT id FROM table
+    WHERE foo = ?foo
+|] [ "foo" '=?' "bar" ]
+@
+-}
+queryWithNamed
+    :: (MonadIO m, WithNamedError m)
+    => PG.RowParser res -- ^ Custom defined row parser
+    -> PG.Connection    -- ^ Database connection
+    -> PG.Query         -- ^ Query with named parameters inside
+    -> [NamedParam]     -- ^ The list of named parameters to be used in the query
+    -> m [res]          -- ^ Resulting rows
+queryWithNamed rowParser conn qNamed params =
+    withNamedArgs qNamed params >>= \(q, actions) ->
+        liftIO $ PG.queryWith rowParser conn q (toList actions)
 
 {- | Modifies the database with a given query and named parameters
 and expects a number of the rows affected.
