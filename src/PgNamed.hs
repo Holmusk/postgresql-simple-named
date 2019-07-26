@@ -38,6 +38,7 @@ module PgNamed
        , queryNamed
        , queryWithNamed
        , executeNamed
+       , returningNamed
 
          -- * Internal utils
        , withNamedArgs
@@ -263,6 +264,29 @@ executeNamed
 executeNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
         liftIO $ PG.execute conn q (toList actions)
+
+{- | Modifies the database with a given query and named parameters
+and returns the specified via @RETURNING@ keyword result.
+
+@
+'returningNamed' dbConnection [sql|
+    __UPDATE__ table
+    __SET__ foo = \'bar\'
+    __WHERE__ id = ?id
+    __RETURNING__ id
+|] [ "id" '=?' someId ]
+@
+-}
+
+returningNamed
+    :: (MonadIO m, WithNamedError m, PG.FromRow res)
+    => PG.Connection  -- ^ Database connection
+    -> PG.Query       -- ^ Query with named parameters inside
+    -> [NamedParam]   -- ^ The list of named parameters to be used in the query
+    -> m [res]        -- ^ Returning result
+returningNamed conn qNamed params =
+    withNamedArgs qNamed params >>= \(q, actions) ->
+        liftIO $ PG.returning conn q [toList actions]
 
 {- | Helper to use named parameters. Use it to implement named wrappers around
 functions from @postgresql-simple@ library. If you think that the function is
