@@ -38,11 +38,13 @@ module PgNamed
        , queryNamed
        , queryWithNamed
        , executeNamed
+       , executeNamed_
 
          -- * Internal utils
        , withNamedArgs
        ) where
 
+import Control.Monad (void)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Bifunctor (bimap)
@@ -263,6 +265,18 @@ executeNamed
 executeNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
         liftIO $ PG.execute conn q (toList actions)
+
+{- | Same as 'executeNamed' but discard the nubmer of rows affected by the given
+query. This function is useful when you're not interested in this number.
+-}
+executeNamed_
+    :: (MonadIO m, WithNamedError m)
+    => PG.Connection  -- ^ Database connection
+    -> PG.Query       -- ^ Query with named parameters inside
+    -> [NamedParam]   -- ^ The list of named parameters to be used in the query
+    -> m ()
+executeNamed_ conn qNamed = void . executeNamed conn qNamed
+{-# INLINE executeNamed_ #-}
 
 {- | Helper to use named parameters. Use it to implement named wrappers around
 functions from @postgresql-simple@ library. If you think that the function is
