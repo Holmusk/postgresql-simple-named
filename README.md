@@ -1,5 +1,7 @@
 # postgresql-simple-named
 
+![Logo](https://user-images.githubusercontent.com/4276606/68105647-408b7c00-fef0-11e9-8d70-d3fbf314a647.png)
+
 [![Build status](https://img.shields.io/travis/Holmusk/postgresql-simple-named.svg?logo=travis)](https://travis-ci.org/Holmusk/postgresql-simple-named)
 [![Hackage](https://img.shields.io/hackage/v/postgresql-simple-named.svg?logo=haskell)](https://hackage.haskell.org/package/postgresql-simple-named)
 [![Stackage Lts](http://stackage.org/package/postgresql-simple-named/badge/lts)](http://stackage.org/lts/package/postgresql-simple-named)
