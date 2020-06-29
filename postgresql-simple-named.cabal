@@ -1,6 +1,6 @@
 cabal-version:       2.4
 name:                postgresql-simple-named
-version:             0.0.2.0
+version:             0.0.2.1
 synopsis:            Implementation of named parameters for `postgresql-simple` library
 description:
     Implementation of named parameters for @postgresql-simple@ library.
@@ -70,7 +70,7 @@ library
   exposed-modules:     PgNamed
   build-depends:       bytestring ^>= 0.10.8
                      , mtl ^>= 2.2
-                     , postgresql-simple ^>= 0.6.2
+                     , postgresql-simple >= 0.5
                      , text ^>= 1.2
 
 test-suite postgresql-simple-named-test
@@ -80,7 +80,7 @@ test-suite postgresql-simple-named-test
   main-is:             Spec.hs
 
   build-depends:       bytestring
-                     , hspec >= 2.6 && < 2.8
+                     , hspec >= 2.5 && < 2.8
                      , postgresql-simple-named
                      , postgresql-simple
                      , resource-pool ^>= 0.2.3.2
