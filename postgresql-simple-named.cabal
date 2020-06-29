@@ -80,7 +80,7 @@ test-suite postgresql-simple-named-test
   main-is:             Spec.hs
 
   build-depends:       bytestring
-                     , hspec >= 2.6 && < 2.8
+                     , hspec >= 2.5 && < 2.8
                      , postgresql-simple-named
                      , postgresql-simple
                      , resource-pool ^>= 0.2.3.2
