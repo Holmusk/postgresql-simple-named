@@ -44,6 +44,7 @@ module PgNamed
        , withNamedArgs
        ) where
 
+import Control.Exception (try)
 import Control.Monad (void)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
@@ -83,6 +84,7 @@ data PgNamedError
     | PgNoNames PG.Query
     -- | Query contains an empty name.
     | PgEmptyName PG.Query
+    | PgSqlError PG.SqlError
     deriving stock (Eq)
 
 
@@ -96,6 +98,8 @@ instance Show PgNamedError where
             "Query has no names but was called with named functions: " ++ BS.unpack q
         PgEmptyName (PG.Query q) ->
             "Query contains an empty name: " ++ BS.unpack q
+        PgSqlError err ->
+            "Query failed with SQL exception: " ++ show err
 
 -- | Checks whether the 'Name' is in the list and returns its parameter.
 lookupName :: Name -> [NamedParam] -> Maybe PG.Action
@@ -269,8 +273,11 @@ executeNamed
     -> [NamedParam]   -- ^ The list of named parameters to be used in the query
     -> m Int64        -- ^ Number of the rows affected by the given query
 executeNamed conn qNamed params =
-    withNamedArgs qNamed params >>= \(q, actions) ->
-        liftIO $ PG.execute conn q (toList actions)
+    withNamedArgs qNamed params >>= \(q, actions) -> do
+        res <- liftIO $ try $ PG.execute conn q (toList actions)
+        case res of
+          Right a  -> pure a
+          Left err -> throwError $ PgSqlError err
 
 {- | Same as 'executeNamed' but discard the nubmer of rows affected by the given
 query. This function is useful when you're not interested in this number.
