@@ -315,3 +315,4 @@ handleIO io = do
     case res of
         Right a  -> pure a
         Left err -> throwError $ PgSqlError err
+{-# INLINE handleIO #-}
