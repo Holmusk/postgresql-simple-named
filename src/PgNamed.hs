@@ -44,6 +44,7 @@ module PgNamed
        , withNamedArgs
        ) where
 
+import Control.Exception (try)
 import Control.Monad (void)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
@@ -82,6 +83,8 @@ data PgNamedError
     | PgNoNames PG.Query
     -- | Query contains an empty name.
     | PgEmptyName PG.Query
+    -- | Query failed to evaluate due to database error.
+    | PgSqlError PG.SqlError
     deriving stock (Eq)
 
 
@@ -95,6 +98,8 @@ instance Show PgNamedError where
             "Query has no names but was called with named functions: " ++ BS.unpack q
         PgEmptyName (PG.Query q) ->
             "Query contains an empty name: " ++ BS.unpack q
+        PgSqlError err ->
+            "Query failed with SQL exception: " ++ show err
 
 -- | Checks whether the 'Name' is in the list and returns its parameter.
 lookupName :: Name -> [NamedParam] -> Maybe PG.Action
@@ -197,7 +202,7 @@ queryNamed
     -> m [res]        -- ^ Resulting rows
 queryNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
-        liftIO $ PG.query conn q (toList actions)
+        handleIO $ PG.query conn q (toList actions)
 
 {- | Queries the database with a given row parser, 'PG.Query', and named parameters
 and expects a list of rows in return.
@@ -242,7 +247,7 @@ queryWithNamed
     -> m [res]          -- ^ Resulting rows
 queryWithNamed rowParser conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
-        liftIO $ PG.queryWith rowParser conn q (toList actions)
+        handleIO $ PG.queryWith rowParser conn q (toList actions)
 
 {- | Modifies the database with a given query and named parameters
 and expects a number of the rows affected.
@@ -263,7 +268,7 @@ executeNamed
     -> m Int64        -- ^ Number of the rows affected by the given query
 executeNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
-        liftIO $ PG.execute conn q (toList actions)
+        handleIO $ PG.execute conn q (toList actions)
 
 {- | Same as 'executeNamed' but discard the nubmer of rows affected by the given
 query. This function is useful when you're not interested in this number.
@@ -295,3 +300,12 @@ withNamedArgs qNamed namedArgs = do
         Right r      -> pure r
     args <- namesToRow names namedArgs
     pure (q, args)
+
+
+handleIO :: (MonadIO m, WithNamedError m) => IO a -> m a
+handleIO io = do
+    res <- liftIO $ try io
+    case res of
+        Right a  -> pure a
+        Left err -> throwError $ PgSqlError err
+{-# INLINE handleIO #-}
