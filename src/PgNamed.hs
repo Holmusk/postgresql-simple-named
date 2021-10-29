@@ -1,5 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE LambdaCase         #-}
 
 {- | Introduces named parameters for @postgresql-simple@ library.
 It uses @?@ question mark symbol as the indicator of the named parameter which
@@ -59,6 +60,7 @@ import GHC.Exts (IsString)
 import qualified Data.ByteString.Char8 as BS
 import qualified Database.PostgreSQL.Simple as PG
 import qualified Database.PostgreSQL.Simple.FromRow as PG
+import qualified Database.PostgreSQL.Simple.Internal as PG
 import qualified Database.PostgreSQL.Simple.ToField as PG
 import qualified Database.PostgreSQL.Simple.Types as PG
 
@@ -113,6 +115,9 @@ For example:
 
 >>> extractNames "SELECT * FROM users WHERE foo = ?foo AND bar = ?bar AND baz = ?foo"
 Right ("SELECT * FROM users WHERE foo = ? AND bar = ? AND baz = ?","foo" :| ["bar","foo"])
+
+>>> extractNames "SELECT foo FROM my_table WHERE (foo->'bar'->'tags' ??| ?selectedTags);"
+Right ("SELECT foo FROM my_table WHERE (foo->'bar'->'tags' ?| ?);","selectedTags" :| [])
 -}
 extractNames
     :: PG.Query
@@ -124,20 +129,19 @@ extractNames qr = go (PG.fromQuery qr) >>= \case
     go :: ByteString -> Either PgNamedError (ByteString, [Name])
     go str
         | BS.null str = Right ("", [])
-        | otherwise   = let (before, after) = BS.break (== '?') str in
+        | otherwise   = let (before, after) = PG.breakOnSingleQuestionMark str in
             case BS.uncons after of
                 Nothing -> Right (before, [])
                 Just ('?', nameStart) ->
-                    let (name, remainingQuery) = BS.span isNameChar nameStart
-                    in if BS.null name
-                           then Left $ PgEmptyName qr
-                           else fmap (bimap ((before <> "?") <>) (Name (decodeUtf8 name) :))
-                                     (go remainingQuery)
+                  let (name, remainingQuery) = BS.span isNameChar nameStart
+                  in if BS.null name
+                         then Left $ PgEmptyName qr
+                         else fmap (bimap ((before <> "?") <>) (Name (decodeUtf8 name) :))
+                                   (go remainingQuery)
                 Just _ -> error "'break (== '?')' doesn't return string started with the question mark"
 
     isNameChar :: Char -> Bool
     isNameChar c = isAlphaNum c || c == '_'
-
 
 {- | Returns the list of values to use in query by given list of 'Name's.
 Throws 'PgNamedError' if any named parameter is not specified.
