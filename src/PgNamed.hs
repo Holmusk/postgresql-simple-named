@@ -1,6 +1,5 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts   #-}
-{-# LANGUAGE LambdaCase         #-}
 
 {- | Introduces named parameters for @postgresql-simple@ library.
 It uses @?@ question mark symbol as the indicator of the named parameter which
@@ -133,11 +132,11 @@ extractNames qr = go (PG.fromQuery qr) >>= \case
             case BS.uncons after of
                 Nothing -> Right (before, [])
                 Just ('?', nameStart) ->
-                  let (name, remainingQuery) = BS.span isNameChar nameStart
-                  in if BS.null name
-                         then Left $ PgEmptyName qr
-                         else fmap (bimap ((before <> "?") <>) (Name (decodeUtf8 name) :))
-                                   (go remainingQuery)
+                    let (name, remainingQuery) = BS.span isNameChar nameStart
+                    in if BS.null name
+                           then Left $ PgEmptyName qr
+                           else fmap (bimap ((before <> "?") <>) (Name (decodeUtf8 name) :))
+                                     (go remainingQuery)
                 Just _ -> error "'break (== '?')' doesn't return string started with the question mark"
 
     isNameChar :: Char -> Bool
