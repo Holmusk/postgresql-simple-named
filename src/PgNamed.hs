@@ -115,8 +115,12 @@ For example:
 >>> extractNames "SELECT * FROM users WHERE foo = ?foo AND bar = ?bar AND baz = ?foo"
 Right ("SELECT * FROM users WHERE foo = ? AND bar = ? AND baz = ?","foo" :| ["bar","foo"])
 
->>> extractNames "SELECT foo FROM my_table WHERE (foo->'bar'->'tags' ??| ?selectedTags);"
-Right ("SELECT foo FROM my_table WHERE (foo->'bar'->'tags' ?| ?);","selectedTags" :| [])
+>>> extractNames "SELECT foo FROM my_table WHERE (foo->'bar' ??| ?selectedTags);"
+Right ("SELECT foo FROM my_table WHERE (foo->'bar' ?| ?);","selectedTags" :| [])
+
+When the operator is not escaped, it's treated as a named parameter
+>>> extractNames "SELECT foo FROM my_table WHERE (foo->'bar' ?| ?selectedTags);"
+Left PostgreSQL named parameter error: Query contains an empty name: SELECT foo FROM my_table WHERE (foo->'bar' ?| ?selectedTags);
 -}
 extractNames
     :: PG.Query
