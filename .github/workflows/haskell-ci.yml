@@ -70,13 +70,14 @@ jobs:
           - 2.7.3
         stack-yaml:
           - stack-8.6.5.yaml
-          - stack-8.8.4.yaml
-          - stack-8.10.7.yaml
+          # - stack-8.8.4.yaml
+          # - stack-8.10.7.yaml
     services:
       postgres:
         image: postgres:12
         env:
           POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: helloci
           POSTGRES_DB: pg_named
         ports:
           - 5432:5432
