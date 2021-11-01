@@ -23,9 +23,7 @@ jobs:
       postgres:
         image: postgres:12
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: helloci
-          POSTGRES_DB: pg_named
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
     steps:
@@ -66,9 +64,7 @@ jobs:
       postgres:
         image: postgres:12
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: helloci
-          POSTGRES_DB: pg_named
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
     steps:
