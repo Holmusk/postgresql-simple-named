@@ -45,8 +45,7 @@ jobs:
         if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
 
       - uses: haskell/actions/setup@v1
-        id: setup-haskell-cabal
-        name: Setup Haskell
+        name: Setup Haskell Cabal
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
@@ -67,13 +66,13 @@ jobs:
         run: cabal build all --only-dependencies
 
       - name: Build
-        run: cabal build all
+        run: cabal build --enable-tests --enable-benchmarks
 
       - name: Test
-        run: cabal test all
+        run: cabal test --enable-tests
 
   stack:
-    name: stack / ghc ${{ matrix.ghc }}
+    name: ${{ matrix.stack-yaml }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
