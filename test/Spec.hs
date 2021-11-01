@@ -19,7 +19,7 @@ import qualified Database.PostgreSQL.Simple.FromRow as Sql
 
 
 connectionSettings :: ByteString
-connectionSettings = "host=localhost port=5432 user=postgres password=helloci dbname=pg_named"
+connectionSettings = "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
 
 main :: IO ()
 main = do

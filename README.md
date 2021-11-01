@@ -76,11 +76,7 @@ Build the library with either `cabal new-build` or `stack build`.
 
 * Run DB in a Docker in a separate terminal window using command:
   ```bash
-  docker run -p 5432:5432 \
-      -e POSTGRES_USER=postgres \
-      -e POSTGRES_PASSWORD=helloci \
-      -e POSTGRES_DB=pg_named \
-      postgres:12
+  docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:12
   ```
 * Run tests using `cabal new-test` or `stack test`
 
