@@ -16,9 +16,9 @@ jobs:
           - ubuntu-latest
         cabal: [3.4]
         ghc:
-          - 8.6.5
           - 8.8.4
           - 8.10.7
+          - 9.0.2
     services:
       postgres:
         image: postgres:12
@@ -57,9 +57,9 @@ jobs:
         stack:
           - 2.7.3
         stack-yaml:
-          - stack-8.6.5.yaml
           - stack-8.8.4.yaml
           - stack-8.10.7.yaml
+          - stack-9.0.2.yaml
     services:
       postgres:
         image: postgres:12
