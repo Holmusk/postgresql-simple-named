@@ -3,6 +3,12 @@
 `postgresql-simple-named` uses [PVP Versioning][1].
 The changelog is available [on GitHub][2].
 
+## 0.0.3.0 - Jun 1, 2022
+
+* Adds support for GHC 8.10 and 9.0
+* [#30](https://github.com/Holmusk/postgresql-simple-named/issues/30):
+  Fixes a bug with postgres-simple-named not recognising postgres JSON operators 
+
 ## 0.0.2.0 — Sep 10, 2019
 
 * [#21](https://github.com/holmusk/postgresql-simple-named/issues/21):
