@@ -26,7 +26,7 @@ maintainer:          Holmusk <tech@holmusk.com>
 copyright:           2019 Holmusk
 category:            Database, PostgreSQL
 build-type:          Simple
-extra-doc-files:     README.md
+extra-source-files:  README.md
                    , CHANGELOG.md
 tested-with:         GHC == 8.8.4
                    , GHC == 8.10.7
