@@ -67,8 +67,8 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v2
-        if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - uses: haskell/actions/setup@v2
         name: Setup Haskell Stack
