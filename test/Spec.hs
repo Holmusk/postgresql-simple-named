@@ -25,12 +25,7 @@ main :: IO ()
 main = do
     hSetEncoding stdout utf8
     hSetEncoding stderr utf8
-    dbPool <- Pool.newPool $ Pool.PoolConfig
-        { createResource = Sql.connectPostgreSQL connectionSettings
-        , freeResource = Sql.close 
-        , poolCacheTTL = 10
-        , poolMaxResources = 5
-        }
+    dbPool <- Pool.createPool (Sql.connectPostgreSQL connectionSettings) Sql.close 10 5 10
     hspec $ unitTests dbPool
 
 unitTests :: Pool.Pool Sql.Connection -> Spec
@@ -82,7 +77,7 @@ unitTests dbPool = describe "Testing: postgresql-simple-named" $ do
         -> Sql.Query
         -> [NamedParam]
         -> IO (Either PgNamedError TestValue)
-    callQuery f q params = Pool.withResource dbPool (\conn -> runNamedQuery $ f conn q params)
+    callQuery f q params = runNamedQuery $ Pool.withResource dbPool (\conn -> f conn q params)
 
 runNamedQuery :: ExceptT PgNamedError IO [TestValue] -> IO (Either PgNamedError TestValue)
 runNamedQuery = fmap (second head) . runExceptT
