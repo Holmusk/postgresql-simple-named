@@ -72,8 +72,8 @@ library
   import:              common-options
   hs-source-dirs:      src
   exposed-modules:     PgNamed
-  build-depends:       bytestring ^>= 0.11
-                     , mtl ^>= 2.2
+  build-depends:       bytestring >= 0.10 && < 0.12
+                     , mtl >= 2.2 && < 2.4
                      , postgresql-simple >= 0.5 && < 0.7
                      , text >= 1.2 && < 2.1
 
