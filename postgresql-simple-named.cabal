@@ -28,16 +28,16 @@ category:            Database, PostgreSQL
 build-type:          Simple
 extra-source-files:  README.md
                    , CHANGELOG.md
-tested-with:         GHC == 8.8.4
-                   , GHC == 8.10.7
+tested-with:         GHC == 8.10.7
                    , GHC == 9.0.2
+                   , GHC == 9.2.4
 
 source-repository head
   type:                git
   location:            https://github.com/Holmusk/postgresql-simple-named.git
 
 common common-options
-  build-depends:       base >= 4.11 && < 4.16
+  build-depends:       base >= 4.11 && < 4.17
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
@@ -72,10 +72,10 @@ library
   import:              common-options
   hs-source-dirs:      src
   exposed-modules:     PgNamed
-  build-depends:       bytestring ^>= 0.10.8
-                     , mtl ^>= 2.2
+  build-depends:       bytestring >= 0.10 && < 0.12
+                     , mtl >= 2.2 && < 2.4
                      , postgresql-simple >= 0.5 && < 0.7
-                     , text ^>= 1.2
+                     , text >= 1.2 && < 2.1
 
 test-suite postgresql-simple-named-test
   import:              common-options
