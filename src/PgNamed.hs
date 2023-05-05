@@ -210,7 +210,7 @@ queryNamed conn qNamed params =
 and expects a list of rows in return.
 
 Sometimes there are multiple ways to parse tuples returned by PostgreSQL into
-the same data type. However, it's not possible to implement multiple intances of
+the same data type. However, it's not possible to implement multiple instances of
 the 'PG.FromRow' typeclass (or any other typeclass).
 
 Consider the following data type:
@@ -224,11 +224,11 @@ __data__ Person = Person
 
 We might want to parse values of the @Person@ data type in two ways:
 
-1. Default by parsing all fields.
+1. Default to parsing all fields.
 2. Parse only name and @age@ to 'Nothing'.
 
 If you want to have multiple instances, you need to create @newtype@ for each
-case. However, in some cases it might not be convenient to deal with newtypes
+case. However, in some cases it might not be convenient to deal with @newtypes@
 around large data types. So you can implement custom 'PG.RowParser' and use it
 with 'queryWithNamed'.
 
@@ -272,7 +272,7 @@ executeNamed conn qNamed params =
     withNamedArgs qNamed params >>= \(q, actions) ->
         liftIO $ PG.execute conn q (toList actions)
 
-{- | Same as 'executeNamed' but discard the nubmer of rows affected by the given
+{- | Same as 'executeNamed' but discard the number of rows affected by the given
 query. This function is useful when you're not interested in this number.
 -}
 executeNamed_
