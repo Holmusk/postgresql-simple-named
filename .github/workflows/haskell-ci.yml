@@ -18,8 +18,8 @@ jobs:
         ghc:
           - 8.10.7
           - 9.0.2
-          - 9.2.4
-          - 9.4.2
+          - 9.2.8
+          - 9.4.5
     services:
       postgres:
         image: postgres:15
@@ -56,10 +56,9 @@ jobs:
     strategy:
       matrix:
         stack:
-          - 2.7.5
-        stack-yaml:
-          - stack-8.10.7.yaml
-          - stack-9.0.2.yaml
+          - 2.11.1
+        ghc:
+          - 9.4.5
     services:
       postgres:
         image: postgres:15
