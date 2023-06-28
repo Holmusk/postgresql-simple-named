@@ -88,7 +88,7 @@ test-suite postgresql-simple-named-test
                      , hspec >= 2.5
                      , postgresql-simple-named
                      , postgresql-simple >= 0.5 && < 0.7
-                     , resource-pool >= 0.2.3 && <= 0.5
+                     , resource-pool ^>= 0.2.3.2
                      , transformers
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
