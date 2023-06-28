@@ -73,19 +73,20 @@ jobs:
       - uses: haskell/actions/setup@v2
         name: Setup Haskell Stack
         with:
+          ghc-version: ${{ matrix.ghc }}
           stack-version: ${{ matrix.stack }}
 
       - uses: actions/cache@v3
         name: Cache ~/.stack
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-${{ matrix.stack-yaml }}
+          key: ${{ runner.os }}-${{ matrix.ghc }}-stack
 
       - name: Install dependencies
-        run: stack build --stack-yaml ${{ matrix.stack-yaml }} --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
+        run: stack build --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
 
       - name: Build
-        run: stack build --stack-yaml ${{ matrix.stack-yaml }} --test --bench --no-run-tests --no-run-benchmarks
+        run: stack build --test --bench --no-run-tests --no-run-benchmarks
 
       - name: Test
-        run: stack test --stack-yaml ${{ matrix.stack-yaml }}
+        run: stack test
