@@ -58,6 +58,8 @@ jobs:
         stack:
           - 2.11.1
         ghc:
+          - 9.0.2
+          - 9.2.8
           - 9.4.5
     services:
       postgres:
