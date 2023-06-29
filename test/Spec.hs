@@ -77,7 +77,7 @@ unitTests dbPool = describe "Testing: postgresql-simple-named" $ do
         -> Sql.Query
         -> [NamedParam]
         -> IO (Either PgNamedError TestValue)
-    callQuery f q params = runNamedQuery $ Pool.withResource dbPool (\conn -> f conn q params)
+    callQuery f q params = Pool.withResource dbPool (\conn -> runNamedQuery $ f conn q params)
 
 runNamedQuery :: ExceptT PgNamedError IO [TestValue] -> IO (Either PgNamedError TestValue)
 runNamedQuery = fmap (second head) . runExceptT

@@ -14,12 +14,12 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-        cabal: [3.6]
+        cabal: [3.10.1.0]
         ghc:
           - 8.10.7
           - 9.0.2
-          - 9.2.4
-          - 9.4.2
+          - 9.2.8
+          - 9.4.5
     services:
       postgres:
         image: postgres:15
@@ -51,15 +51,19 @@ jobs:
         run: cabal test --enable-tests
 
   stack:
-    name: ${{ matrix.stack-yaml }}
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os }} / ${{ matrix.stack-yaml }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - ubuntu-latest
         stack:
-          - 2.7.5
+          - 2.11.1
         stack-yaml:
           - stack-8.10.7.yaml
           - stack-9.0.2.yaml
+          - stack-9.2.8.yaml
+          - stack-9.4.5.yaml
     services:
       postgres:
         image: postgres:15
