@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE CPP                #-}
 
 module Main (main) where
 
@@ -25,7 +26,12 @@ main :: IO ()
 main = do
     hSetEncoding stdout utf8
     hSetEncoding stderr utf8
-    dbPool <- Pool.createPool (Sql.connectPostgreSQL connectionSettings) Sql.close 10 5 10
+    dbPool <- 
+#if MIN_VERSION_resource_pool(0,4,0)
+        Pool.newPool (Pool.defaultPoolConfig ((Sql.connectPostgreSQL connectionSettings)) Sql.close 1 10)
+#else
+        Pool.createPool (Sql.connectPostgreSQL connectionSettings) Sql.close 10 5 10
+#endif
     hspec $ unitTests dbPool
 
 unitTests :: Pool.Pool Sql.Connection -> Spec
