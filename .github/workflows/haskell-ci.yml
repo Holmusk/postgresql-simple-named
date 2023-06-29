@@ -51,10 +51,12 @@ jobs:
         run: cabal test --enable-tests
 
   stack:
-    name: ${{ matrix.os }} / ${{ matrix.stack-yaml }}
-    runs-on: ubuntu-latest
+    name: ${{ runner.os }} / ${{ matrix.stack-yaml }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - ubuntu-latest
         stack:
           - 2.11.1
         stack-yaml:
