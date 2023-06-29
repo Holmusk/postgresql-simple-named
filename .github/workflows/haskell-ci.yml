@@ -51,7 +51,7 @@ jobs:
         run: cabal test --enable-tests
 
   stack:
-    name: ${{ matrix.stack-yaml }}
+    name: stack ${{ matrix.os }} / ghc ${{ matrix.ghc }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
