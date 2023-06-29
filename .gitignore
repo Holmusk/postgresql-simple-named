@@ -23,7 +23,7 @@ cabal.project.local
 .HTF/
 # Stack
 .stack-work/
-*.yaml.lock
+stack-*.yaml.lock
 
 ### IDE/support
 # Vim

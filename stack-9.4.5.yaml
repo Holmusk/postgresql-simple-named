@@ -1,5 +1,4 @@
 resolver: lts-21.0
 
 extra-deps:
-  # https://github.com/commercialhaskell/stackage/issues/6852
   - resource-pool-0.2.3.2@sha256:0955486bc1db37e4eb27acb964185f9e9cb8ad5ce054c85e1e6fd7562b2d7542,1375
