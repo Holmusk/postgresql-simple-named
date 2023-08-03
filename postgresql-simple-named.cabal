@@ -30,15 +30,16 @@ extra-source-files:  README.md
                    , CHANGELOG.md
 tested-with:         GHC == 8.10.7
                    , GHC == 9.0.2
-                   , GHC == 9.2.4
-                   , GHC == 9.4.2
+                   , GHC == 9.2.8
+                   , GHC == 9.4.5
+                   , GHC == 9.6.2
 
 source-repository head
   type:                git
   location:            https://github.com/Holmusk/postgresql-simple-named.git
 
 common common-options
-  build-depends:       base >= 4.11 && < 4.18
+  build-depends:       base >= 4.11 && < 4.19
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
