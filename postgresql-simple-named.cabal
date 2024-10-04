@@ -28,18 +28,18 @@ category:            Database, PostgreSQL
 build-type:          Simple
 extra-source-files:  README.md
 extra-doc-files:     CHANGELOG.md
-tested-with:         GHC == 9.0.2
-                   , GHC == 9.2.8
+tested-with:         GHC == 9.2.8
                    , GHC == 9.4.8
-                   , GHC == 9.6.4
+                   , GHC == 9.6.6
                    , GHC == 9.8.2
+                   , GHC == 9.10.1
 
 source-repository head
   type:                git
   location:            https://github.com/Holmusk/postgresql-simple-named.git
 
 common common-options
-  build-depends:       base >= 4.11 && < 4.20
+  build-depends:       base >= 4.11 && < 4.21
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns

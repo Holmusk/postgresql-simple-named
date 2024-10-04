@@ -17,11 +17,11 @@ jobs:
         cabal:
           - "3.10"
         ghc:
-          - 9.0.2
           - 9.2.8
           - 9.4.8
-          - 9.6.4
+          - 9.6.6
           - 9.8.2
+          - 9.10.1
     services:
       postgres:
         image: postgres:15
@@ -40,7 +40,7 @@ jobs:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache ~/.cabal/store
         with:
           path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
@@ -62,10 +62,9 @@ jobs:
         stack:
           - 2.15.5
         stack-yaml:
-          - stack-9.0.2.yaml
           - stack-9.2.8.yaml
           - stack-9.4.8.yaml
-          - stack-9.6.4.yaml
+          - stack-9.6.6.yaml
           - stack-9.8.2.yaml
     services:
       postgres:
@@ -76,9 +75,9 @@ jobs:
           - 5432:5432
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - uses: haskell/actions/setup@v2
+      - uses: haskell-actions/setup@v2
         name: Setup Haskell Stack
         with:
           stack-version: ${{ matrix.stack }}
