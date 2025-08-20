@@ -20,8 +20,8 @@ jobs:
           - 9.2.8
           - 9.4.8
           - 9.6.6
-          - 9.8.2
-          - 9.10.1
+          - 9.8.4
+          - 9.10.2
     services:
       postgres:
         image: postgres:15
@@ -65,7 +65,8 @@ jobs:
           - stack-9.2.8.yaml
           - stack-9.4.8.yaml
           - stack-9.6.6.yaml
-          - stack-9.8.2.yaml
+          - stack-9.8.4.yaml
+          - stack-9.10.2.yaml
     services:
       postgres:
         image: postgres:15
