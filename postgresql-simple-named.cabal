@@ -1,6 +1,6 @@
 cabal-version:       2.4
 name:                postgresql-simple-named
-version:             0.0.5.0
+version:             0.0.6.0
 synopsis:            Implementation of named parameters for `postgresql-simple` library
 description:
     Implementation of named parameters for @postgresql-simple@ library.
@@ -28,18 +28,18 @@ category:            Database, PostgreSQL
 build-type:          Simple
 extra-source-files:  README.md
 extra-doc-files:     CHANGELOG.md
-tested-with:         GHC == 9.2.8
-                   , GHC == 9.4.8
+tested-with:         GHC == 9.4.8
                    , GHC == 9.6.7
                    , GHC == 9.8.4
                    , GHC == 9.10.2
+                   , GHC == 9.12.2
 
 source-repository head
   type:                git
   location:            https://github.com/Holmusk/postgresql-simple-named.git
 
 common common-options
-  build-depends:       base >= 4.11 && < 4.21
+  build-depends:       base >= 4.11 && < 4.22
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns

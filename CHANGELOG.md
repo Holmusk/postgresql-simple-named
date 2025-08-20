@@ -3,6 +3,10 @@
 `postgresql-simple-named` uses [PVP Versioning][1].
 The changelog is available [on GitHub][2].
 
+## 0.0.6.0 - Aug 20, 2025
+
+* Add support for GHC 9.12
+
 ## 0.0.5.0 - Jan 4, 2024
 
 * Add support for GHC 9.6 and 9.8
