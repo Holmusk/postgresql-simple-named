@@ -42,6 +42,8 @@ module PgNamed
 
          -- * Internal utils
        , withNamedArgs
+       , executeManyNamed
+       , executeManyNamed_
        ) where
 
 import Control.Monad (void)
@@ -62,6 +64,7 @@ import qualified Database.PostgreSQL.Simple.FromRow as PG
 import qualified Database.PostgreSQL.Simple.Internal as PG
 import qualified Database.PostgreSQL.Simple.ToField as PG
 import qualified Database.PostgreSQL.Simple.Types as PG
+import qualified Data.Foldable
 
 
 -- | Wrapper over name of the argument.
@@ -284,6 +287,43 @@ executeNamed_
 executeNamed_ conn qNamed = void . executeNamed conn qNamed
 {-# INLINE executeNamed_ #-}
 
+{- | Modifies the database with a given query and a collection of items, each
+turned into a set of named parameters by the given function, and expects a
+number of the rows affected. This is the named-parameters equivalent of
+@postgresql-simple@'s 'PG.executeMany': the query is executed once with every
+item's parameters bound, which is more efficient than looping over 'executeNamed'.
+
+@
+'executeManyNamed' dbConnection [sql|
+    __INSERT__ __INTO__ table (id, name)
+    __VALUES__ (?id, ?name)
+|] (\\user -> [ "id" '=?' userId user, "name" '=?' userName user ]) users
+@
+-}
+executeManyNamed
+    :: (Foldable f, MonadIO m, WithNamedError m)
+    => PG.Connection       -- ^ Database connection
+    -> PG.Query            -- ^ Query with named parameters inside
+    -> (a -> [NamedParam]) -- ^ Function to turn an item into a set of named params
+    -> f a                 -- ^ The collection of items to be used in the query
+    -> m Int64             -- ^ Number of the rows affected by the given query
+executeManyNamed conn qNamed buildParams items =
+    withNamedArgsMany qNamed buildParams items >>= \(q, actions) ->
+        liftIO $ PG.executeMany conn q actions
+
+{- | Same as 'executeManyNamed' but discard the number of rows affected by the given
+query. This function is useful when you're not interested in this number.
+-}
+executeManyNamed_
+    :: (Foldable f, MonadIO m, WithNamedError m)
+    => PG.Connection       -- ^ Database connection
+    -> PG.Query            -- ^ Query with named parameters inside
+    -> (a -> [NamedParam]) -- ^ Function to turn an item into a set of named params
+    -> f a                 -- ^ The collection of items to be used in the query
+    -> m ()
+executeManyNamed_ conn qNamed buildParams = void . executeManyNamed conn qNamed buildParams
+{-# INLINE executeManyNamed_#-}
+
 {- | Helper to use named parameters. Use it to implement named wrappers around
 functions from @postgresql-simple@ library. If you think that the function is
 useful, consider opening feature request to the @postgresql-simple-named@
@@ -302,3 +342,16 @@ withNamedArgs qNamed namedArgs = do
         Right r      -> pure r
     args <- namesToRow names namedArgs
     pure (q, args)
+
+withNamedArgsMany
+    :: (Foldable f, WithNamedError m)
+    => PG.Query
+    -> (a -> [NamedParam])
+    -> f a
+    -> m (PG.Query, [[PG.Action]])
+withNamedArgsMany qNamed buildArgs items = do
+    (q, names) <- case extractNames qNamed of
+        Left errType -> throwError errType
+        Right r      -> pure r
+    args <- mapM (namesToRow names . buildArgs) (Data.Foldable.toList items)
+    pure (q, toList <$> args)

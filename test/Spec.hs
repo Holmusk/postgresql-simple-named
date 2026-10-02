@@ -5,14 +5,16 @@
 
 module Main (main) where
 
+import Control.Exception (bracket_)
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
 import Data.Bifunctor (second)
 import Data.ByteString (ByteString)
+import Data.Int (Int64)
 import GHC.Generics (Generic)
 import System.IO (hSetEncoding, stderr, stdout, utf8)
-import Test.Hspec (Spec, describe, hspec, it, shouldReturn)
+import Test.Hspec (Spec, describe, hspec, it, shouldBe, shouldReturn)
 
-import PgNamed (NamedParam, PgNamedError (..), queryNamed, queryWithNamed, (=?))
+import PgNamed (NamedParam, PgNamedError (..), executeManyNamed, queryNamed, queryWithNamed, (=?))
 
 import qualified Data.Pool as Pool
 import qualified Database.PostgreSQL.Simple as Sql
@@ -46,6 +48,44 @@ unitTests dbPool = describe "Testing: postgresql-simple-named" $ do
         queryTestValue `shouldReturn` Right (TestValue 42 42 "baz")
     it "named parameters are parsed correctly by user defined row parser" $
         queryWithTestValue `shouldReturn` Right (TestValue 42 42 "baz")
+    it "executeManyNamed inserts multiple rows and returns the number of affected rows" $
+        withRollback dbPool $ \conn -> do
+            setupExecuteManyTable conn
+            result <- insertRows conn [InsertRow 1 "foo", InsertRow 2 "bar", InsertRow 3 "baz"]
+            result `shouldBe` Right (3 :: Int64)
+            rows <- Sql.query_ conn "SELECT id, name FROM execute_many_test ORDER BY id"
+                :: IO [(Int, ByteString)]
+            rows `shouldBe` [(1, "foo"), (2, "bar"), (3, "baz")]
+    it "executeManyNamed inserts five rows and selects them all back" $
+        withRollback dbPool $ \conn -> do
+            setupExecuteManyTable conn
+            let fiveRows =
+                    [ InsertRow 1 "aaa", InsertRow 2 "bbb", InsertRow 3 "ccc"
+                    , InsertRow 4 "ddd", InsertRow 5 "eee"
+                    ]
+            result <- insertRows conn fiveRows
+            result `shouldBe` Right (5 :: Int64)
+            rows <- Sql.query_ conn "SELECT * FROM execute_many_test ORDER BY id"
+                :: IO [(Int, ByteString)]
+            rows `shouldBe` [(1, "aaa"), (2, "bbb"), (3, "ccc"), (4, "ddd"), (5, "eee")]
+    it "executeManyNamed returns 0 when given an empty collection" $
+        withRollback dbPool $ \conn -> do
+            setupExecuteManyTable conn
+            result <- insertRows conn []
+            result `shouldBe` Right (0 :: Int64)
+    it "executeManyNamed returns error when a named parameter is missing" $
+        withRollback dbPool $ \conn -> do
+            setupExecuteManyTable conn
+            result <- runExceptT $ executeManyNamed conn
+                "INSERT INTO execute_many_test (id, name) VALUES (?id, ?name)"
+                (\InsertRow{..} -> ["id" =? rowId])
+                [InsertRow 1 "foo"]
+            result `shouldBe` Left (PgNamedParam "name")
+    it "executeManyNamed returns error when query has no named parameters" $
+        withRollback dbPool $ \conn -> do
+            result <- runExceptT $
+                executeManyNamed conn "SELECT 42" insertRowParams [InsertRow 1 "foo"]
+            result `shouldBe` Left (PgNoNames "SELECT 42")
   where
     missingNamedParam :: IO (Either PgNamedError TestValue)
     missingNamedParam = run "SELECT ?foo, ?bar" ["foo" =? True]
@@ -101,3 +141,29 @@ testValueParser = do
     intVal2 <- Sql.field
     txtVal  <- Sql.field
     return TestValue{..}
+
+data InsertRow = InsertRow
+    { rowId   :: !Int
+    , rowName :: !ByteString
+    }
+
+insertRowParams :: InsertRow -> [NamedParam]
+insertRowParams InsertRow{..} = ["id" =? rowId, "name" =? rowName]
+
+-- | Runs the action inside a transaction that is always rolled back
+-- afterwards, so any tables or rows it creates never outlive the test.
+withRollback :: Pool.Pool Sql.Connection -> (Sql.Connection -> IO a) -> IO a
+withRollback dbPool action = Pool.withResource dbPool $ \conn ->
+    bracket_ (Sql.begin conn) (Sql.rollback conn) (action conn)
+
+setupExecuteManyTable :: Sql.Connection -> IO ()
+setupExecuteManyTable conn = do
+    _ <- Sql.execute_ conn
+        "CREATE TABLE execute_many_test (id INT NOT NULL, name TEXT NOT NULL)"
+    pure ()
+
+insertRows :: Sql.Connection -> [InsertRow] -> IO (Either PgNamedError Int64)
+insertRows conn rows = runExceptT $ executeManyNamed conn
+    "INSERT INTO execute_many_test (id, name) VALUES (?id, ?name)"
+    insertRowParams
+    rows
